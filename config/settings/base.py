@@ -12,19 +12,24 @@ BASE_DIR = Path(__file__).resolve().parents[2]
 
 def _parse_database_url(database_url: str) -> dict:
     parsed = urlparse(database_url)
-    if parsed.scheme not in {"postgres", "postgresql"}:
-        raise ValueError("Only postgres database URLs are supported for InvoiceFlow.")
+    # if parsed.scheme not in {"postgres", "postgresql"}:
+    #     raise ValueError("Only postgres database URLs are supported for InvoiceFlow.")
 
     if not parsed.path or parsed.path == "/":
         raise ValueError("DATABASE_URL must include a database name.")
 
+    # return {
+    #     "ENGINE": "django_tenants.postgresql_backend",
+    #     "NAME": parsed.path.lstrip("/"),
+    #     "USER": parsed.username or "",
+    #     "PASSWORD": parsed.password or "",
+    #     "HOST": parsed.hostname or "",
+    #     "PORT": str(parsed.port or ""),
+    # }
+    
     return {
-        "ENGINE": "django_tenants.postgresql_backend",
-        "NAME": parsed.path.lstrip("/"),
-        "USER": parsed.username or "",
-        "PASSWORD": parsed.password or "",
-        "HOST": parsed.hostname or "",
-        "PORT": str(parsed.port or ""),
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     }
 
 
