@@ -1,20 +1,36 @@
-﻿{% if form.non_field_errors %}
-  <div class="form-banner">
+﻿{# templates/includes/form_fields.html #}
+
+{% if form.non_field_errors %}
+  <div class="form-banner bg-red-50 border-l-4 border-red-500 p-4 mb-4">
     {% for error in form.non_field_errors %}
-      <div class="form-error">{{ error }}</div>
+      <div class="form-error text-red-700 text-sm font-medium">{{ error }}</div>
     {% endfor %}
   </div>
 {% endif %}
 
 {% for field in form %}
-  <div class="form-group">
-    <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-    {{ field }}
+  <div class="form-group mb-5">
+    <label class="form-label block text-sm font-semibold text-gray-700 mb-1" for="{{ field.id_for_label }}">
+      {{ field.label }}
+      {% if field.field.required %}<span class="text-red-500">*</span>{% endif %}
+    </label>
+
+    {# Render the field with custom CSS classes #}
+    <div class="field-wrapper">
+      {{ field }}
+    </div>
+
     {% if field.help_text %}
-      <div class="form-help">{{ field.help_text }}</div>
+      <div class="form-help text-xs text-gray-500 mt-1">{{ field.help_text|safe }}</div>
     {% endif %}
-    {% for error in field.errors %}
-      <div class="form-error">{{ error }}</div>
-    {% endfor %}
+
+    {% if field.errors %}
+      {% for error in field.errors %}
+        <div class="form-error text-red-600 text-xs mt-1 font-medium">
+          <span class="material-symbols-rounded align-middle text-sm">error</span>
+          {{ error }}
+        </div>
+      {% endfor %}
+    {% endif %}
   </div>
 {% endfor %}

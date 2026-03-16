@@ -1,83 +1,117 @@
 ﻿{% extends "base.html" %}
-
 {% block title %}Clients | InvoiceFlow{% endblock %}
 
 {% block navbar_actions %}
-  <button class="btn btn-primary" type="button" hx-get="{% url 'clients:create' %}" hx-target="#client-modal-body" hx-swap="innerHTML" onclick="openModal('client-modal')">Add client</button>
+  <button class="btn btn-primary" type="button"
+    hx-get="{% url 'clients:create' %}"
+    hx-target="#client-modal-body"
+    hx-swap="innerHTML"
+    onclick="openModal('client-modal')">
+    <span class="material-symbols-rounded" style="font-size:18px">add</span>
+    Add client
+  </button>
 {% endblock %}
 
 {% block content %}
-  <section class="card">
-    <div class="card-header">
-      <div>
-        <div class="card-title">Clients</div>
-        <div class="card-subtitle">Manage your client list and contact details.</div>
-      </div>
-      <form method="get" class="search-inline">
-        <input type="search" name="q" value="{{ request.GET.q }}" placeholder="Search clients" aria-label="Search clients">
-        <button class="btn btn-secondary" type="submit">Search</button>
-      </form>
-    </div>
-    <div class="card-body">
-      {% if clients %}
-        <div class="cards-grid">
-          {% for client in clients %}
-            <div class="client-card">
-              <div class="client-card-header">
-                <div>
-                  <div class="client-name">{{ client.name }}</div>
-                  <div class="client-company">{{ client.company|default:"Independent" }}</div>
-                </div>
-                <span class="pill">{{ client.invoices.count }} invoices</span>
-              </div>
-              <div class="client-details">
-                <div>
-                  <div class="detail-label">Email</div>
-                  <div class="detail-value">{{ client.email|default:"Not provided" }}</div>
-                </div>
-                <div>
-                  <div class="detail-label">Phone</div>
-                  <div class="detail-value">{{ client.phone|default:"Not provided" }}</div>
-                </div>
-              </div>
-              <div class="client-metrics">
-                <div>
-                  <div class="metric-label">Total invoiced</div>
-                  <div class="metric-value">{{ client.total_invoiced|default:0|floatformat:2 }}</div>
-                </div>
-                <div>
-                  <div class="metric-label">Outstanding</div>
-                  <div class="metric-value">{{ client.outstanding|default:0|floatformat:2 }}</div>
-                </div>
-              </div>
-              <div class="client-actions">
-                <a class="btn btn-ghost" href="{% url 'clients:update' client.pk %}">Edit</a>
-                <form method="post" action="{% url 'clients:delete' client.pk %}" data-confirm="Delete this client?" class="inline-form">
-                  {% csrf_token %}
-                  <button class="btn btn-ghost danger" type="submit">Delete</button>
-                </form>
-              </div>
+
+<div class="clients-toolbar">
+  <div>
+    <div class="clients-count">{{ clients.paginator.count|default:clients|length }} client{{ clients|length|pluralize }}</div>
+  </div>
+  <form method="get" class="clients-search">
+    <span class="material-symbols-rounded search-icon">search</span>
+    <input type="search" name="q" value="{{ request.GET.q }}" placeholder="Search by name, company or email…" aria-label="Search clients">
+  </form>
+</div>
+
+{% if clients %}
+  <div class="clients-grid">
+    {% for client in clients %}
+      <div class="client-card">
+        <div class="client-card-top">
+          <div class="client-avatar" data-initials="{{ client.name|slice:':1'|upper }}{% if client.name.split.1 %}{{ client.name.split.1|slice:':1'|upper }}{% endif %}">
+            {{ client.name|slice:':1'|upper }}{% if client.name.split.1 %}{{ client.name.split.1|slice:':1'|upper }}{% endif %}
+          </div>
+          <span class="client-invoice-pill">{{ client.invoices.count }} invoice{{ client.invoices.count|pluralize }}</span>
+        </div>
+
+        <div class="client-identity">
+          <div class="client-name">{{ client.name }}</div>
+          <div class="client-company">{{ client.company|default:"Independent" }}</div>
+        </div>
+
+        <div class="client-divider"></div>
+
+        <div class="client-details">
+          <div class="client-detail">
+            <div class="detail-label">Email</div>
+            <div class="detail-value">{{ client.email|default:"Not provided" }}</div>
+          </div>
+          <div class="client-detail">
+            <div class="detail-label">Phone</div>
+            <div class="detail-value">{{ client.phone|default:"Not provided" }}</div>
+          </div>
+        </div>
+
+        <div class="client-metrics">
+          <div class="metric-cell">
+            <div class="metric-label">Total invoiced</div>
+            <div class="metric-value">{{ client.total_invoiced|default:0|floatformat:2 }}</div>
+          </div>
+          <div class="metric-cell">
+            <div class="metric-label">Outstanding</div>
+            <div class="metric-value {% if client.outstanding > 0 %}metric-danger{% else %}metric-success{% endif %}">
+              {{ client.outstanding|default:0|floatformat:2 }}
             </div>
-          {% endfor %}
+          </div>
         </div>
-      {% else %}
-        <div class="empty-state">
-          <h3>No clients yet</h3>
-          <p>Create your first client to start building invoices.</p>
-          <button class="btn btn-primary" type="button" hx-get="{% url 'clients:create' %}" hx-target="#client-modal-body" hx-swap="innerHTML" onclick="openModal('client-modal')">Add your first client</button>
+
+        <div class="client-actions">
+          <a class="client-btn" href="{% url 'clients:update' client.pk %}">Edit</a>
+          <form method="post" action="{% url 'clients:delete' client.pk %}" data-confirm="Delete {{ client.name }}?" class="inline-form">
+            {% csrf_token %}
+            <button class="client-btn client-btn-danger" type="submit">Delete</button>
+          </form>
         </div>
-      {% endif %}
-    </div>
-  </section>
+      </div>
+    {% endfor %}
+  </div>
 
   {% include "partials/pagination.html" %}
 
-  <div id="client-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="client-modal-title">
-    <div class="modal">
+{% else %}
+  <div class="clients-empty">
+    <div class="empty-icon-wrap">
+      <span class="material-symbols-rounded" style="font-size:32px;color:#CBD5E1">group</span>
+    </div>
+    <div class="empty-heading">No clients yet</div>
+    <p class="empty-body">Create your first client to start building invoices and tracking payments.</p>
+    <button class="btn btn-primary" type="button"
+      hx-get="{% url 'clients:create' %}"
+      hx-target="#client-modal-body"
+      hx-swap="innerHTML"
+      onclick="openModal('client-modal')">
+      <span class="material-symbols-rounded" style="font-size:18px">add</span>
+      Add your first client
+    </button>
+  </div>
+{% endif %}
+
+<div id="client-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="client-modal-title">
+  <div class="modal">
+    <div class="modal-header">
       <div class="modal-title" id="client-modal-title">Add client</div>
-      <div id="client-modal-body">
-        <div class="modal-loading">Loading form...</div>
+      <button class="modal-close" type="button" onclick="closeModal('client-modal')">
+        <span class="material-symbols-rounded">close</span>
+      </button>
+    </div>
+    <div id="client-modal-body">
+      <div class="modal-loading">
+        <span class="material-symbols-rounded spinning">progress_activity</span>
+        Loading…
       </div>
     </div>
   </div>
+</div>
+
 {% endblock %}
