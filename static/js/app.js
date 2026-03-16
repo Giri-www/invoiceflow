@@ -60,25 +60,28 @@
 
   // 3) Modal open/close
   window.openModal = function openModal(id) {
-    const overlay = qs(`#${id}`);
-    if (!overlay) return;
-    overlay.classList.add("open");
-  };
+  const overlay = qs(`#${id}`);
+  if (!overlay) return;
+  overlay.classList.add("open");
+  // Prevent background scrolling
+  document.body.style.overflow = "hidden"; 
+};
 
-  window.closeModal = function closeModal(id) {
-    const overlay = qs(`#${id}`);
-    if (!overlay) return;
-    overlay.classList.remove("open");
-  };
-
-  function setupModalCloseOnBackdrop() {
-    qsa(".modal-overlay").forEach(function (overlay) {
-      overlay.addEventListener("click", function (e) {
-        if (e.target === overlay) overlay.classList.remove("open");
-      });
-    });
-  }
-
+window.closeModal = function closeModal(id) {
+  const overlay = qs(`#${id}`);
+  if (!overlay) return;
+  overlay.classList.remove("open");
+  // Restore background scrolling
+  document.body.style.overflow = ""; 
+};
+function setupModalCloseOnBackdrop() {
+  document.addEventListener("click", function (e) {
+    // Check if the clicked element IS a modal overlay
+    if (e.target.classList.contains("modal-overlay")) {
+      closeModal(e.target.id);
+    }
+  });
+}
   // 4) Invoice line items
   function setupInvoiceBuilder() {
     const builder = qs("[data-invoice-builder]");
