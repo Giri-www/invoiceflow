@@ -1,0 +1,184 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Invoice {{ invoice.invoice_number }} | InvoiceFlow{% endblock %}
+
+{% block navbar_actions %}
+  <a class="btn btn-secondary" href="{% url 'invoices:list' %}">Back to invoices</a>
+  <a class="btn btn-primary" href="{% url 'invoices:pdf' invoice.pk %}">Download PDF</a>
+{% endblock %}
+
+{% block content %}
+  <section class="invoice-hero">
+    <div>
+      <div class="invoice-kicker">Invoice</div>
+      <h1>{{ invoice.invoice_number }}</h1>
+      <p>Issued {{ invoice.issue_date|date:"M d, Y" }} and due {{ invoice.due_date|date:"M d, Y" }}.</p>
+    </div>
+    <div class="invoice-status">
+      <span class="badge badge-{{ invoice.status }}">{{ invoice.get_status_display }}</span>
+      <div class="invoice-total">{{ invoice.total|floatformat:2 }}</div>
+    </div>
+  </section>
+
+  <section class="invoice-actions">
+    <div class="action-group">
+      <a class="btn btn-secondary" href="{% url 'invoices:update' invoice.pk %}">Edit</a>
+      <form method="post" action="{% url 'invoices:delete' invoice.pk %}" data-confirm="Delete this invoice?" class="inline-form">
+        {% csrf_token %}
+        <button class="btn btn-ghost danger" type="submit">Delete</button>
+      </form>
+    </div>
+    <div class="action-group">
+      {% if invoice.status == 'draft' %}
+        <form method="post" action="{% url 'invoices:send' invoice.pk %}">
+          {% csrf_token %}
+          <button class="btn btn-primary" type="submit">Send to client</button>
+        </form>
+      {% endif %}
+      {% if invoice.status == 'sent' or invoice.status == 'overdue' %}
+        <form method="post" action="{% url 'invoices:mark_paid' invoice.pk %}">
+          {% csrf_token %}
+          <button class="btn btn-primary" type="submit">Mark paid</button>
+        </form>
+      {% endif %}
+      {% if invoice.status != 'cancelled' and invoice.status != 'paid' %}
+        <form method="post" action="{% url 'invoices:cancel' invoice.pk %}">
+          {% csrf_token %}
+          <button class="btn btn-ghost" type="submit">Cancel invoice</button>
+        </form>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="grid-two">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Client</div>
+          <div class="card-subtitle">Billing details</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="detail-list">
+          <div>
+            <div class="detail-label">Name</div>
+            <div class="detail-value">{{ invoice.client.name }}</div>
+          </div>
+          <div>
+            <div class="detail-label">Company</div>
+            <div class="detail-value">{{ invoice.client.company|default:"Not provided" }}</div>
+          </div>
+          <div>
+            <div class="detail-label">Email</div>
+            <div class="detail-value">{{ invoice.client.email|default:"Not provided" }}</div>
+          </div>
+          <div>
+            <div class="detail-label">Phone</div>
+            <div class="detail-value">{{ invoice.client.phone|default:"Not provided" }}</div>
+          </div>
+          <div>
+            <div class="detail-label">Address</div>
+            <div class="detail-value">{{ invoice.client.address|default:"Not provided"|linebreaksbr }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Invoice activity</div>
+          <div class="card-subtitle">Timeline of status updates</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <ul class="timeline">
+          {% for entry in activity %}
+            <li>
+              <span class="timeline-dot"></span>
+              <div>
+                <div class="timeline-label">{{ entry.label }}</div>
+                <div class="timeline-date">{{ entry.at|date:"M d, Y H:i" }}</div>
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+        <div class="public-link">
+          {% with full_link=request.scheme|add:"://"|add:request.get_host|add:public_link %}
+            <div class="detail-label">Public link</div>
+            <div class="detail-value">{{ full_link }}</div>
+          {% endwith %}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Line items</div>
+        <div class="card-subtitle">All services and products included</div>
+      </div>
+    </div>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Description</th>
+            <th>Qty</th>
+            <th>Unit price</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in invoice.items.all %}
+            <tr>
+              <td>{{ item.description }}</td>
+              <td>{{ item.quantity }}</td>
+              <td>{{ item.unit_price|floatformat:2 }}</td>
+              <td>{{ item.amount|floatformat:2 }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="4" class="empty">No line items.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="grid-two">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Notes</div>
+          <div class="card-subtitle">Shared with the client</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <p class="long-text">{{ invoice.notes|default:"No notes."|linebreaksbr }}</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Terms</div>
+          <div class="card-subtitle">Payment expectations</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <p class="long-text">{{ invoice.terms|default:"No terms."|linebreaksbr }}</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="card totals-card">
+    <div class="card-body">
+      <div class="totals-row"><span>Subtotal</span><span>{{ invoice.subtotal|floatformat:2 }}</span></div>
+      <div class="totals-row"><span>Tax</span><span>{{ invoice.tax_amount|floatformat:2 }}</span></div>
+      <div class="totals-row"><span>Discount</span><span>{{ invoice.discount|floatformat:2 }}</span></div>
+      <div class="totals-total"><span>Total due</span><span>{{ invoice.total|floatformat:2 }}</span></div>
+    </div>
+  </section>
+{% endblock %}

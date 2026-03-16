@@ -1,0 +1,21 @@
+﻿{% extends "auth_base.html" %}
+
+{% block title %}Sign in | InvoiceFlow{% endblock %}
+
+{% block content %}
+  <div class="auth-card">
+    <h2 class="auth-title">Welcome back</h2>
+    <p class="auth-subtitle">Sign in to continue to your workspace.</p>
+
+    <form method="post" class="auth-form">
+      {% csrf_token %}
+      {% include "partials/form_fields.html" with form=form %}
+      <button class="btn btn-primary btn-block" type="submit">Sign in</button>
+    </form>
+
+    <div class="auth-footer">
+      <span>New to InvoiceFlow?</span>
+      <a href="{% url 'accounts:register' %}">Create an account</a>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,24 @@
+﻿{% extends "base.html" %}
+
+{% block title %}{{ page_title }} | InvoiceFlow{% endblock %}
+
+{% block content %}
+  <section class="card form-card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">{{ page_title }}</div>
+        <div class="card-subtitle">Update details for {{ client.name }}.</div>
+      </div>
+      <a class="btn btn-secondary" href="{% url 'clients:list' %}">Back to clients</a>
+    </div>
+    <div class="card-body">
+      <form method="post">
+        {% csrf_token %}
+        {% include "partials/form_fields.html" with form=form %}
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit">Save changes</button>
+        </div>
+      </form>
+    </div>
+  </section>
+{% endblock %}

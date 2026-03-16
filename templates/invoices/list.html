@@ -1,0 +1,98 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Invoices | InvoiceFlow{% endblock %}
+
+{% block navbar_actions %}
+  <a class="btn btn-primary" href="{% url 'invoices:create' %}">New invoice</a>
+{% endblock %}
+
+{% block content %}
+  <section class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Invoices</div>
+        <div class="card-subtitle">Track statuses, totals, and due dates in one place.</div>
+      </div>
+      <form method="get" class="search-inline">
+        <input type="search" name="q" value="{{ request.GET.q }}" placeholder="Search invoice number or client" aria-label="Search invoices">
+        <button class="btn btn-secondary" type="submit">Search</button>
+      </form>
+    </div>
+    <div class="card-body">
+      <form method="get" class="filter-bar">
+        <div class="filter-grid">
+          <div>
+            <label class="form-label" for="id_status">Status</label>
+            {{ filterset.form.status }}
+          </div>
+          <div>
+            <label class="form-label" for="id_client">Client</label>
+            {{ filterset.form.client }}
+          </div>
+          <div>
+            <label class="form-label" for="id_issue_date_after">From</label>
+            {{ filterset.form.issue_date_after }}
+          </div>
+          <div>
+            <label class="form-label" for="id_issue_date_before">To</label>
+            {{ filterset.form.issue_date_before }}
+          </div>
+          <div>
+            <label class="form-label" for="id_sort">Sort</label>
+            <select name="sort" id="id_sort">
+              <option value="-issue_date" {% if request.GET.sort == "-issue_date" %}selected{% endif %}>Newest</option>
+              <option value="issue_date" {% if request.GET.sort == "issue_date" %}selected{% endif %}>Oldest</option>
+              <option value="-due_date" {% if request.GET.sort == "-due_date" %}selected{% endif %}>Due date (soon)</option>
+              <option value="due_date" {% if request.GET.sort == "due_date" %}selected{% endif %}>Due date (later)</option>
+              <option value="-total" {% if request.GET.sort == "-total" %}selected{% endif %}>Highest total</option>
+              <option value="total" {% if request.GET.sort == "total" %}selected{% endif %}>Lowest total</option>
+            </select>
+          </div>
+        </div>
+        <div class="filter-actions">
+          <button class="btn btn-secondary" type="submit">Apply filters</button>
+          <a class="btn btn-ghost" href="{% url 'invoices:list' %}">Reset</a>
+        </div>
+      </form>
+    </div>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Invoice</th>
+            <th>Client</th>
+            <th>Issue date</th>
+            <th>Due date</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for invoice in invoices %}
+            <tr>
+              <td>
+                <a class="link" href="{% url 'invoices:detail' invoice.pk %}">{{ invoice.invoice_number }}</a>
+              </td>
+              <td>{{ invoice.client.name }}</td>
+              <td>{{ invoice.issue_date|date:"M d, Y" }}</td>
+              <td>{{ invoice.due_date|date:"M d, Y" }}</td>
+              <td>{{ invoice.total|floatformat:2 }}</td>
+              <td><span class="badge badge-{{ invoice.status }}">{{ invoice.get_status_display }}</span></td>
+              <td class="table-actions">
+                <a class="btn btn-ghost" href="{% url 'invoices:detail' invoice.pk %}">View</a>
+                <a class="btn btn-ghost" href="{% url 'invoices:pdf' invoice.pk %}">PDF</a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="7" class="empty">No invoices found.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  {% include "partials/pagination.html" %}
+{% endblock %}

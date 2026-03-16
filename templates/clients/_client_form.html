@@ -1,0 +1,8 @@
+﻿<form method="post" class="modal-form">
+  {% csrf_token %}
+  {% include "partials/form_fields.html" with form=form %}
+  <div class="modal-actions">
+    <button class="btn btn-secondary" type="button" onclick="closeModal('client-modal')">Cancel</button>
+    <button class="btn btn-primary" type="submit">Save client</button>
+  </div>
+</form>

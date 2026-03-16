@@ -1,0 +1,58 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>{{ invoice.invoice_number }}</title>
+    <style>
+      body { margin: 0; padding: 0; background: #f4f4f5; font-family: Arial, sans-serif; color: #111827; }
+      .wrap { max-width: 600px; margin: 0 auto; background: #ffffff; padding: 28px; }
+      .brand { font-size: 20px; font-weight: 700; margin-bottom: 16px; }
+      .meta { color: #6b7280; font-size: 13px; }
+      .cta { display: inline-block; background: #1f6feb; color: #ffffff; padding: 10px 16px; text-decoration: none; border-radius: 6px; margin-top: 16px; }
+      table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+      th, td { padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: left; font-size: 13px; }
+      th { background: #f9fafb; text-transform: uppercase; letter-spacing: 0.05em; font-size: 11px; color: #6b7280; }
+      .totals { margin-top: 16px; }
+      .totals-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; }
+      .totals-total { font-weight: 700; font-size: 15px; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="brand">InvoiceFlow</div>
+      <p>Hi {{ invoice.client.name }},</p>
+      <p>Your invoice <strong>{{ invoice.invoice_number }}</strong> is ready. The total due is <strong>{{ invoice.total|floatformat:2 }}</strong> and payment is due on {{ invoice.due_date|date:"M d, Y" }}.</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Description</th>
+            <th>Qty</th>
+            <th>Unit price</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in invoice.items.all %}
+            <tr>
+              <td>{{ item.description }}</td>
+              <td>{{ item.quantity }}</td>
+              <td>{{ item.unit_price|floatformat:2 }}</td>
+              <td>{{ item.amount|floatformat:2 }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <div class="totals">
+        <div class="totals-row"><span>Subtotal</span><span>{{ invoice.subtotal|floatformat:2 }}</span></div>
+        <div class="totals-row"><span>Tax</span><span>{{ invoice.tax_amount|floatformat:2 }}</span></div>
+        <div class="totals-row"><span>Discount</span><span>{{ invoice.discount|floatformat:2 }}</span></div>
+        <div class="totals-row totals-total"><span>Total</span><span>{{ invoice.total|floatformat:2 }}</span></div>
+      </div>
+
+      <p class="meta">You can view the invoice at /invoices/public/{{ invoice.public_token }}/.</p>
+      <p class="meta">Thank you for your business.</p>
+    </div>
+  </body>
+</html>

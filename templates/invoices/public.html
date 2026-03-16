@@ -1,0 +1,82 @@
+﻿{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ invoice.invoice_number }} | InvoiceFlow</title>
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  </head>
+  <body class="public-body">
+    <main class="public-shell">
+      <header class="public-header">
+        <div class="brand public-brand">
+          <span class="brand-mark">IF</span>
+          <span class="brand-name">InvoiceFlow</span>
+        </div>
+        <div class="public-meta">
+          <span class="badge badge-{{ invoice.status }}">{{ invoice.get_status_display }}</span>
+          <span class="public-total">{{ invoice.total|floatformat:2 }}</span>
+        </div>
+      </header>
+
+      <section class="public-card">
+        <div class="public-title">
+          <h1>{{ invoice.invoice_number }}</h1>
+          <p>Issued {{ invoice.issue_date|date:"M d, Y" }} and due {{ invoice.due_date|date:"M d, Y" }}.</p>
+        </div>
+        <div class="public-grid">
+          <div>
+            <div class="detail-label">Client</div>
+            <div class="detail-value">{{ invoice.client.name }}</div>
+            <div class="detail-value">{{ invoice.client.company|default:"" }}</div>
+            <div class="detail-value">{{ invoice.client.email|default:"" }}</div>
+          </div>
+          <div>
+            <div class="detail-label">Prepared by</div>
+            <div class="detail-value">{{ invoice.created_by.full_name|default:"InvoiceFlow" }}</div>
+            <div class="detail-value">{{ invoice.created_by.email }}</div>
+          </div>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Description</th>
+                <th>Qty</th>
+                <th>Unit price</th>
+                <th>Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in invoice.items.all %}
+                <tr>
+                  <td>{{ item.description }}</td>
+                  <td>{{ item.quantity }}</td>
+                  <td>{{ item.unit_price|floatformat:2 }}</td>
+                  <td>{{ item.amount|floatformat:2 }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="public-totals">
+          <div class="totals-row"><span>Subtotal</span><span>{{ invoice.subtotal|floatformat:2 }}</span></div>
+          <div class="totals-row"><span>Tax</span><span>{{ invoice.tax_amount|floatformat:2 }}</span></div>
+          <div class="totals-row"><span>Discount</span><span>{{ invoice.discount|floatformat:2 }}</span></div>
+          <div class="totals-total"><span>Total</span><span>{{ invoice.total|floatformat:2 }}</span></div>
+        </div>
+        <div class="public-notes">
+          <div>
+            <div class="detail-label">Notes</div>
+            <div class="detail-value">{{ invoice.notes|default:"No notes."|linebreaksbr }}</div>
+          </div>
+          <div>
+            <div class="detail-label">Terms</div>
+            <div class="detail-value">{{ invoice.terms|default:"No terms."|linebreaksbr }}</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

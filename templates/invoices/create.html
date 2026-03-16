@@ -1,0 +1,188 @@
+﻿{% extends "base.html" %}
+
+{% block title %}{{ page_title }} | InvoiceFlow{% endblock %}
+
+{% block content %}
+  <form method="post" data-invoice-builder data-formset-prefix="items">
+    {% csrf_token %}
+    <div class="page-split">
+      <section class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Invoice details</div>
+            <div class="card-subtitle">Who are you billing and when is it due?</div>
+          </div>
+        </div>
+        <div class="card-body">
+          {% if form.non_field_errors %}
+            <div class="form-banner">
+              {% for error in form.non_field_errors %}
+                <div class="form-error">{{ error }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label" for="{{ form.client.id_for_label }}">Client</label>
+              {{ form.client }}
+              {% for error in form.client.errors %}
+                <div class="form-error">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="{{ form.issue_date.id_for_label }}">Issue date</label>
+              {{ form.issue_date }}
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="{{ form.due_date.id_for_label }}">Due date</label>
+              {{ form.due_date }}
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="{{ form.tax_rate.id_for_label }}">Tax rate (%)</label>
+              {{ form.tax_rate }}
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="{{ form.discount.id_for_label }}">Discount</label>
+              {{ form.discount }}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Invoice summary</div>
+            <div class="card-subtitle">Auto calculated totals</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="invoice-summary">
+            <div class="summary-row">
+              <span>Subtotal</span>
+              <span id="summary-subtotal">{{ invoice.subtotal|default:0|floatformat:2 }}</span>
+            </div>
+            <div class="summary-row">
+              <span>Tax</span>
+              <span id="summary-tax">{{ invoice.tax_amount|default:0|floatformat:2 }}</span>
+            </div>
+            <div class="summary-row">
+              <span>Discount</span>
+              <span id="summary-discount">{{ invoice.discount|default:0|floatformat:2 }}</span>
+            </div>
+            <div class="summary-total">
+              <span>Total</span>
+              <span id="summary-total">{{ invoice.total|default:0|floatformat:2 }}</span>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-secondary" type="submit" name="action" value="draft">Save draft</button>
+            <button class="btn btn-primary" type="submit" name="action" value="send">Save and send</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <section class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Line items</div>
+          <div class="card-subtitle">Add everything you are billing for.</div>
+        </div>
+        <button class="btn btn-ghost" type="button" data-add-line-item>Add line item</button>
+      </div>
+      <div class="card-body">
+        {{ formset.management_form }}
+        {% if formset.non_form_errors %}
+          <div class="form-banner">
+            {% for error in formset.non_form_errors %}
+              <div class="form-error">{{ error }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+        <div class="table-container">
+          <table class="line-items-table">
+            <thead>
+              <tr>
+                <th>Description</th>
+                <th class="col-qty">Qty</th>
+                <th class="col-price">Unit price</th>
+                <th class="col-amount">Amount</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody data-line-items-body>
+              {% for item_form in formset.forms %}
+                <tr data-line-item-row>
+                  <td>
+                    {{ item_form.description }}
+                    {% for error in item_form.description.errors %}
+                      <div class="form-error">{{ error }}</div>
+                    {% endfor %}
+                  </td>
+                  <td>
+                    {{ item_form.quantity }}
+                    {% for error in item_form.quantity.errors %}
+                      <div class="form-error">{{ error }}</div>
+                    {% endfor %}
+                  </td>
+                  <td>
+                    {{ item_form.unit_price }}
+                    {% for error in item_form.unit_price.errors %}
+                      <div class="form-error">{{ error }}</div>
+                    {% endfor %}
+                  </td>
+                  <td>
+                    {{ item_form.amount }}
+                  </td>
+                  <td class="table-actions">
+                    <button class="btn btn-ghost danger" type="button" data-remove-line-item>Remove</button>
+                    {{ item_form.id }}
+                    {% if item_form.DELETE %}
+                      {{ item_form.DELETE }}
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Notes and terms</div>
+          <div class="card-subtitle">Optional details that appear on the invoice.</div>
+        </div>
+      </div>
+      <div class="card-body form-grid">
+        <div class="form-group">
+          <label class="form-label" for="{{ form.notes.id_for_label }}">Notes</label>
+          {{ form.notes }}
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="{{ form.terms.id_for_label }}">Terms</label>
+          {{ form.terms }}
+        </div>
+      </div>
+    </section>
+
+    <template id="line-item-template">
+      <tr data-line-item-row>
+        <td>{{ formset.empty_form.description }}</td>
+        <td>{{ formset.empty_form.quantity }}</td>
+        <td>{{ formset.empty_form.unit_price }}</td>
+        <td>{{ formset.empty_form.amount }}</td>
+        <td class="table-actions">
+          <button class="btn btn-ghost danger" type="button" data-remove-line-item>Remove</button>
+          {{ formset.empty_form.id }}
+          {% if formset.empty_form.DELETE %}
+            {{ formset.empty_form.DELETE }}
+          {% endif %}
+        </td>
+      </tr>
+    </template>
+  </form>
+{% endblock %}

@@ -22,15 +22,21 @@ def _parse_database_url(database_url: str) -> dict:
     #     "ENGINE": "django_tenants.postgresql_backend",
     #     "NAME": parsed.path.lstrip("/"),
     #     "USER": parsed.username or "",
-    #     "PASSWORD": parsed.password or "",
+    #     "PASSWORD": parsed.password or "admin",
     #     "HOST": parsed.hostname or "",
     #     "PORT": str(parsed.port or ""),
     # }
-    
+    # For development, allow sqlite as well
+   
     return {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django_tenants.postgresql_backend",
+        'NAME': 'invoiceflow2',
+        'USER': 'postgres',       # match your pgAdmin user
+        'PASSWORD': 'admin',  # correct password
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
+
 
 
 SECRET_KEY = config("SECRET_KEY", default="unsafe-dev-secret-key")

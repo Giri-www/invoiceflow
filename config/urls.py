@@ -11,12 +11,12 @@ urlpatterns = [
     path("", include("apps.dashboard.urls")),
     path("clients/", include("apps.clients.urls")),
     path("invoices/", include("apps.invoices.urls")),
-    path("billing/", include("apps.billing.urls")),
+    # path("billing/", include("apps.billing.urls")),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
-    path("api/auth/", include("apps.accounts.api_urls")),
-    path("api/", include("apps.invoices.api_urls")),
-    path("api/", include("apps.clients.api_urls")),
+    path("api/auth/", include("apps.accounts.urls")),
+    path("api/", include("apps.invoices.urls")),
+    path("api/", include("apps.clients.urls")),
 ]
 
 if settings.DEBUG:
